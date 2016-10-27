@@ -1,7 +1,7 @@
 from graphics import *
 
 
-def midpoint(p1, p2):
+def midpoint(p1, p2):  # takes two Point objects as parameters
     x1 = p1.getX()
     x2 = p2.getX()
     y1 = p1.getY()
@@ -10,26 +10,33 @@ def midpoint(p1, p2):
     x = (x1 + x2) / 2
     y = (y1 + y2) / 2
 
-    return Point(x, y)
+    return Point(x, y)  # returns the midpoint as a Point object
 
 
-def squareButton_push(tfPoint, brPoint, win):
+def squareButton_push(topLeftPoint, bottomRightPoint, win):
+    # takes 2 points and GraphWin as parameters
     m = win.getMouse()
 
-    if(m.getX() >= tfPoint.getX() and m.getX() <= brPoint.getX() and
-       m.getY() >= tfPoint.getY() and m.getY() <= brPoint.getY()):
+    if(m.getX() >= topLeftPoint.getX() and
+       m.getX() <= bottomRightPoint.getX() and
+       m.getY() >= topLeftPoint.getY() and
+       m.getY() <= bottomRightPoint.getY()):
         return True
+        # returns True if a square 'button' is clicked in a particular GraphWin
 
 
 def button(tfPoint, brPoint, text, win):
+    # takes top-left, bottom-right Point objects,
+    #   String, and GraphWin as parameters
+
     shape = Rectangle(tfPoint, brPoint)
     mid = midpoint(tfPoint, brPoint)
-    button_text = Text(mid, text)
+    button_text = Text(mid, text)  # text displayed in center of button
     shape.draw(win)
     button_text.draw(win)
 
 
-def main():
+def main():  # example usage
     w = 500
     win = GraphWin("Title", w, w)
     p1 = Point(50, 50)
@@ -38,7 +45,7 @@ def main():
 
     while(True):
         if(squareButton_push(p1, p2, win)):
-            print("lol")
+            print("lol")  # printed only if button clicked
 
 if __name__ == "__main__":
     main()
