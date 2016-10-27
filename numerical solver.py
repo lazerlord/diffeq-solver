@@ -35,14 +35,14 @@ def limits():
     title = Text(Point(0, 4), "Put in your limits")
     title.draw(win)
 
-    lim1 = Text(Point(-2, 3), "left limit:")
+    lim1_text = Text(Point(-2, 3), "left limit:")
     lim1 = Entry(Point(1, 3), 5)
-    lim1.draw(win)
+    lim1_text.draw(win)
     lim1.draw(win)
 
-    lim2 = Text(Point(-2, 1), "right limit:")
+    lim2_text = Text(Point(-2, 1), "right limit:")
     lim2 = Entry(Point(1, 1), 5)
-    lim2.draw(win)
+    lim2_text.draw(win)
     lim2.draw(win)
 
     button = Rectangle(Point(-2, 0), Point(2, -3))
@@ -63,7 +63,7 @@ def limits():
 def integral(f, LEP, REP):
     a, b = limits()
     d = abs(REP-LEP)
-    win2 = Plot(f, LEP, REP)
+    win2 = plot(f, LEP, REP)
     a = str(a)
     a = str(b)
 
