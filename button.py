@@ -13,7 +13,7 @@ def midpoint(p1, p2):
     return Point(x, y)
 
 
-def squareButton_push(tfPoint, brPoint):
+def squareButton_push(tfPoint, brPoint, win):
     m = win.getMouse()
 
     if(m.getX() >= tfPoint.getX() and m.getX() <= brPoint.getX() and
@@ -29,13 +29,16 @@ def button(tfPoint, brPoint, text, win):
     button_text.draw(win)
 
 
+def main():
+    w = 500
+    win = GraphWin("Title", w, w)
+    p1 = Point(50, 50)
+    p2 = Point(100, 100)
+    button(p1, p2, "stuff", win)
 
-w = 500
-win = GraphWin("Title", w, w)
-p1 = Point(50, 50)
-p2 = Point(100, 100)
-button(p1, p2, "stuff", win)
+    while(True):
+        if(squareButton_push(p1, p2, win)):
+            print("lol")
 
-while(True):
-    if(squareButton_push(p1, p2)):
-        print("lol")
+if __name__ == "__main__":
+    main()
