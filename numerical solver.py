@@ -17,10 +17,10 @@ def plot(f, LEP, REP):
     yAxis = Line(Point(-abs(REP), -d), Point(-abs(REP), d))
     yAxis.draw(win)
     for i in range(d*1000):
-        i = str(LEP+i*.001)
-        d = abs(REP-i)
-        I = str(i) # Must convert number into a string before putting into existing string, else will cause TypeError
-        F = f.replace('x', I) # Since the number changes everytime through the loop we cannot replace original string
+        i = LEP+i*.001 # cannot have number - string, TypeError.
+        d = abs(REP-i) 
+        i = str(i) # Must convert number into a string before putting into existing string, else will cause TypeError
+        F = f.replace('x', i) # Since the number changes everytime through the loop we cannot replace original string
         y = eval(F)
         y = Point(-d, y)
         y.setFill('cyan2')
@@ -65,15 +65,15 @@ def integral(f, LEP, REP):
     a, b = limits()
     d = abs(REP-LEP)
     win2 = plot(f, LEP, REP)
-    a = str(a)
-    a = str(b)
+    A = str(a) # a<i<b will not work if a and b are strings, TypeError.
+    B = str(b)
 
     for i in range(d*1000):
         i = LEP+i*.001
         if a < i < b:
             d = abs(REP-i)
             i = str(i)
-            f = f.replace('x', I)
+            F = f.replace('x', i) #keep original function intact
             y = eval(F)
             y = Line(Point(-d, y), Point(-d, 0))
             y.setFill('cyan2')
@@ -82,6 +82,7 @@ def integral(f, LEP, REP):
             pass
 
     # should the following two if statements be indented
+    
     # What this does is print the location of the left and right limits. 
     # The if statements are to make sure they are inside the graphed region.
 
@@ -119,8 +120,8 @@ def integral(f, LEP, REP):
         x = xi[i]*abs(b-a)+a
         x = str(x)
         w = wi[i]
-        f = f.replace('x', X)
-        y = w*eval(F)
+        F = f.replace('x', x) # Must keep original function intact for multiple
+        y = w*eval(F) #itterations.
         total = total + y
     area = total*abs(b-a)
 
@@ -167,9 +168,16 @@ def main():
 
     while True:
         p = win.getMouse()
+        
+        # Dr. Kubota made the graphics file so idk if we are allowed to
+        # go in and change it, but im sure it's fine.
+        
         if -130 <= p.getX() <= -70 and 0 <= p.getY() <= 30:
             # try:
                 # undraw things from different labels and answer boxes
+                
+                # does not seem to work
+                
                 # SolLabel.undraw()
                 # answer.undraw()
             # except GraphicsError:
