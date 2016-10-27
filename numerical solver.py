@@ -58,6 +58,7 @@ def limits():
 
     return eval(lim1.getText()), eval(lim2.getText())
     # wtf are you returning here? a tuple??
+    # I am returning the limits entered, so that the integral part knows where to start and stop
 
 
 def integral(f, LEP, REP):
