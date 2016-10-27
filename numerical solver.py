@@ -19,9 +19,9 @@ def plot(f, LEP, REP):
     for i in range(d*1000):
         i = str(LEP+i*.001)
         d = abs(REP-i)
-        # I = str(i)
-        f = f.replace('x', i)
-        y = eval(f)
+        I = str(i) # Must convert number into a string before putting into existing string, else will cause TypeError
+        F = f.replace('x', I) # Since the number changes everytime through the loop we cannot replace original string
+        y = eval(F)
         y = Point(-d, y)
         y.setFill('cyan2')
         y.draw(win)
