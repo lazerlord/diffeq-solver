@@ -82,6 +82,8 @@ def integral(f, LEP, REP):
             pass
 
     # should the following two if statements be indented
+    # What this does is print the location of the left and right limits. 
+    # The if statements are to make sure they are inside the graphed region.
 
     if a < REP:
         aPoint = Text(Point(-abs(REP-a), -d/8), A)
