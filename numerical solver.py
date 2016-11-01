@@ -57,7 +57,6 @@ def limits():
     win.close()
 
     return eval(lim1.getText()), eval(lim2.getText())
-    # wtf are you returning here? a tuple??
 
 
 def integral(f, LEP, REP):
@@ -132,9 +131,43 @@ def roots(f, LEP, REP):
     
     d = abs(REP-LEP)
     win = plot(f, LEP, REP)
+    roots=[]
 
-    for i in range[10]:
-        pass
+    for i in range(100):
+        x1=((i+1)*d)/100-d/100+LEP
+        x2=((i+1)*d)/100+d/100+LEP
+        for k in range(100):
+            X1=str(x1)
+            X2=str(x2)
+            F1=f.replace('x', X1)
+            F2=f.replace('x', X2)
+            if eval(F1)==0:
+                x3=x1
+                break
+            if 1-(eval(F2)/eval(F1))==0:
+                break
+            x3=x1-(x1-x2)/(1-(eval(F2)/eval(F1)))
+            x1,x2=x2,x3
+
+        x3=round(x3,5)
+        if x3 in roots:
+            pass
+        else:
+            roots.append(x3)
+
+    
+    for i in range(100):
+        if i<=len(roots)-1:
+            p=-abs(REP-roots[i])
+            point=Circle(Point(p,0),d/80)
+            point.setOutline('red')
+            point.setFill('red')
+            point.draw(win)
+            text=Text(Point(p, -d/8), str(roots[i]))
+            text.draw(win)
+        else:
+            break
+        
 
 def main():
     win = GraphWin('Numerical Solver Pro', 400, 400)
@@ -154,7 +187,7 @@ def main():
 
     button2 = Rectangle(Point(-30, 30), Point(30, 0))
     button2.draw(win)
-    button2Text = Text(Point(0, 15), 'Solve of \n roots')
+    button2Text = Text(Point(0, 15), 'Solve for \n roots')
     button2Text.draw(win)
 
     button3 = Rectangle(Point(130, 30), Point(70, 0))
@@ -204,7 +237,12 @@ def main():
             answer.setText(sol)
             answer.draw(win)
         elif -30 <= p.getX() <= 30 and 0 <= p.getY() <= 30:
-            pass  # not done yet
+            f = entry.getText()
+            f = f.replace('^', '**')
+            f = f.replace('exp', '2.718281828459045**')
+            Lep = floor(eval(LEP.getText()))
+            Rep = ceil(eval(REP.getText()))
+            roots(f,Lep,Rep)
         elif 70 <= p.getX() <= 130 and 0 <= p.getY() <= 30:
             pass  # not done yet
         else:
