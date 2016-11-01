@@ -17,10 +17,10 @@ def plot(f, LEP, REP):
     yAxis = Line(Point(-abs(REP), -d), Point(-abs(REP), d))
     yAxis.draw(win)
     for i in range(d*1000):
-        i = LEP+i*.001 # cannot have number - string, TypeError.
-        d = abs(REP-i) 
-        i = str(i) # Must convert number into a string before putting into existing string, else will cause TypeError
-        F = f.replace('x', i) # Since the number changes everytime through the loop we cannot replace original string
+        i = LEP+i*.001
+        d = abs(REP-i) # cannot have number - string, TypeError.
+        i = str(i)
+        F = f.replace('x', i)
         y = eval(F)
         y = Point(-d, y)
         y.setFill('cyan2')
@@ -58,13 +58,12 @@ def limits():
 
     return eval(lim1.getText()), eval(lim2.getText())
     # wtf are you returning here? a tuple??
-    # I am returning the limits entered, so that the integral part knows where to start and stop
 
 
 def integral(f, LEP, REP):
     a, b = limits()
     d = abs(REP-LEP)
-    win2 = plot(f, LEP, REP)
+    win = plot(f, LEP, REP)
     A = str(a) # a<i<b will not work if a and b are strings, TypeError.
     B = str(b)
 
@@ -77,26 +76,27 @@ def integral(f, LEP, REP):
             y = eval(F)
             y = Line(Point(-d, y), Point(-d, 0))
             y.setFill('cyan2')
-            y.draw(win2)
+            y.draw(win)
         else:
             pass
 
     # should the following two if statements be indented
-    
+
     # What this does is print the location of the left and right limits. 
     # The if statements are to make sure they are inside the graphed region.
+
 
     if a < REP:
         aPoint = Text(Point(-abs(REP-a), -d/8), A)
         aPoint.setStyle('bold')
-        aPoint.draw(win2)
+        aPoint.draw(win)
     else:
         pass
 
     if b > LEP:
         bPoint = Text(Point(-abs(REP-b), -d/8), B)
         bPoint.setStyle('bold')
-        bPoint.draw(win2)
+        bPoint.draw(win)
     else:
         pass
 
@@ -121,12 +121,20 @@ def integral(f, LEP, REP):
         x = str(x)
         w = wi[i]
         F = f.replace('x', x) # Must keep original function intact for multiple
-        y = w*eval(F) #itterations.
+        y = w*eval(F)       #itterations.
         total = total + y
     area = total*abs(b-a)
 
     return area
 
+
+def roots(f, LEP, REP):
+    
+    d = abs(REP-LEP)
+    win = plot(f, LEP, REP)
+
+    for i in range[10]:
+        pass
 
 def main():
     win = GraphWin('Numerical Solver Pro', 400, 400)
@@ -168,9 +176,9 @@ def main():
 
     while True:
         p = win.getMouse()
-        
+
         # Dr. Kubota made the graphics file so idk if we are allowed to
-        # go in and change it, but im sure it's fine.
+        # go in and change it
         
         if -130 <= p.getX() <= -70 and 0 <= p.getY() <= 30:
             # try:
@@ -180,6 +188,7 @@ def main():
                 
                 # SolLabel.undraw()
                 # answer.undraw()
+                
             # except GraphicsError:
                 # pass
             f = entry.getText()
