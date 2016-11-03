@@ -4,6 +4,7 @@
 
 from graphics import *
 from math import *
+from button import *
 
 
 def plot(f, LEP, REP):
@@ -45,16 +46,19 @@ def limits():
     lim2_text.draw(win)
     lim2.draw(win)
 
-    button = Rectangle(Point(-2, 0), Point(2, -3))
+    button = Button(Point(-2, 0), Point(2, -3), 'Done')
     button.draw(win)
     lim1.setText('-.8')
     lim2.setText('-.3')
 
-    done = Text(Point(0, -1.5), 'Done')
-    done.draw(win)
-
-    win.getMouse()
-    win.close()
+    while True:
+        p = win.getMouse()
+        
+        if button.isClicked(p):
+            win.close()
+            break
+        else:
+            pass
 
     return eval(lim1.getText()), eval(lim2.getText())
 
@@ -149,11 +153,21 @@ def roots(f, LEP, REP):
             x3=x1-(x1-x2)/(1-(eval(F2)/eval(F1)))
             x1,x2=x2,x3
 
-        x3=round(x3,5)
-        if x3 in roots:
-            pass
-        else:
-            roots.append(x3)
+        X3=str(x3)
+        v=eval(f.replace('x', X3))
+        if -(10**(-20))<=v<=10**(-20):
+            
+            x3=round(x3,8)
+            if LEP<=x3<=REP:
+            
+                if x3 in roots:
+                    pass
+                else:
+                    roots.append(x3)
+
+            
+            
+
 
     
     for i in range(100):
@@ -180,20 +194,14 @@ def main():
     entry.draw(win)
     entry.setText('(x-.5)^2*(x+.5)*(x-1)')
 
-    button1 = Rectangle(Point(-130, 30), Point(-70, 0))
+    button1 = Button(Point(-130, 30), Point(-70, 0),'Integrate')
     button1.draw(win)
-    button1Text = Text(Point(-100, 15), 'Integrate')
-    button1Text.draw(win)
 
-    button2 = Rectangle(Point(-30, 30), Point(30, 0))
+    button2 = Button(Point(-30, 30), Point(30, 0),'Solve for \n roots')
     button2.draw(win)
-    button2Text = Text(Point(0, 15), 'Solve for \n roots')
-    button2Text.draw(win)
 
-    button3 = Rectangle(Point(130, 30), Point(70, 0))
+    button3 = Button(Point(130, 30), Point(70, 0), 'Find \n derivative \n at a point')
     button3.draw(win)
-    button3Text = Text(Point(100, 15), 'Find \n derivative \n at a point')
-    button3Text.draw(win)
 
     lft = Text(Point(-40, -20), "   Plot from x =")
     lft.draw(win)
@@ -213,7 +221,7 @@ def main():
         # Dr. Kubota made the graphics file so idk if we are allowed to
         # go in and change it
         
-        if -130 <= p.getX() <= -70 and 0 <= p.getY() <= 30:
+        if button1.isClicked(p):
             # try:
                 # undraw things from different labels and answer boxes
                 
@@ -236,14 +244,14 @@ def main():
             answer = Entry(Point(0, -85), 20)
             answer.setText(sol)
             answer.draw(win)
-        elif -30 <= p.getX() <= 30 and 0 <= p.getY() <= 30:
+        elif button2.isClicked(p):
             f = entry.getText()
             f = f.replace('^', '**')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
             roots(f,Lep,Rep)
-        elif 70 <= p.getX() <= 130 and 0 <= p.getY() <= 30:
+        elif button3.isClicked(p):
             pass  # not done yet
         else:
             pass
