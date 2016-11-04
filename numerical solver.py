@@ -62,7 +62,46 @@ def limits():
 
     return eval(lim1.getText()), eval(lim2.getText())
 
+def evaluateAt():
+    win = GraphWin('Evaluation Point')
+    win.setCoords(-5, -5, 5, 5)
 
+    title = Text(Point(0, 3.5), "Put in what point you \n want to evaluate the \n derivative at")
+    title.draw(win)
+
+    point=Entry(Point(0, 0), 15)
+    point.draw(win)
+
+    end=Button(Point(-2,-2),Point(2,-3.5), 'Done')
+    end.draw(win)
+
+    while True:
+        p=win.getMouse()
+
+        if end.isClicked(p):
+            win.close()
+            break
+        else:
+            pass
+
+    return eval(point.getText())
+
+
+def derivative(f, LEP,REP):
+    x=evaluateAt()
+    d = abs(REP-LEP)
+    win = plot(f, LEP, REP)
+    X=str(x)
+    h=d/1000
+    xPh=x+h
+    xMh=x-h
+
+    Fx=f.replace('x',X)
+#not done yet.
+    
+    
+
+    
 def integral(f, LEP, REP):
     a, b = limits()
     d = abs(REP-LEP)
@@ -83,10 +122,6 @@ def integral(f, LEP, REP):
         else:
             pass
 
-    # should the following two if statements be indented
-
-    # What this does is print the location of the left and right limits. 
-    # The if statements are to make sure they are inside the graphed region.
 
 
     if a < REP:
@@ -155,7 +190,7 @@ def roots(f, LEP, REP):
 
         X3=str(x3)
         v=eval(f.replace('x', X3))
-        if -(10**(-20))<=v<=10**(-20):
+        if -(10**(-16))<=v<=10**(-16):
             
             x3=round(x3,8)
             if LEP<=x3<=REP:
@@ -165,11 +200,7 @@ def roots(f, LEP, REP):
                 else:
                     roots.append(x3)
 
-            
-            
-
-
-    
+    roots.sort()
     for i in range(100):
         if i<=len(roots)-1:
             p=-abs(REP-roots[i])
@@ -181,6 +212,9 @@ def roots(f, LEP, REP):
             text.draw(win)
         else:
             break
+
+        
+    return roots
         
 
 def main():
@@ -215,44 +249,54 @@ def main():
     REP.draw(win)
     REP.setText('1')
 
+
+
+    answer = Entry(Point(0, -85), 20)
+    SolLabel = Text(Point(0, -70),'')
+
     while True:
         p = win.getMouse()
 
-        # Dr. Kubota made the graphics file so idk if we are allowed to
-        # go in and change it
+        
         
         if button1.isClicked(p):
-            # try:
-                # undraw things from different labels and answer boxes
+                 #undraw things from different labels and answer boxes
+            SolLabel.undraw()
+            answer.undraw()
                 
-                # does not seem to work
-                
-                # SolLabel.undraw()
-                # answer.undraw()
-                
-            # except GraphicsError:
-                # pass
+
+            
             f = entry.getText()
             f = f.replace('^', '**')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
             sol = integral(f, Lep, Rep)
-            SolLabel = Text(Point(0, -70),
-                            'The area under the curve within the limits is')
+            SolLabel.setText('The area under the curve within the limits is')
+            
             SolLabel.draw(win)
-            answer = Entry(Point(0, -85), 20)
+            
             answer.setText(sol)
             answer.draw(win)
         elif button2.isClicked(p):
+            SolLabel.undraw()
+            answer.undraw()
+            
             f = entry.getText()
             f = f.replace('^', '**')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
-            roots(f,Lep,Rep)
+            Roots=roots(f,Lep,Rep)
+            
+            SolLabel.setText('The roots of this function are')
+            SolLabel.draw(win)
+
+            answer.setText(Roots)
+            answer.draw(win)
+            
         elif button3.isClicked(p):
-            pass  # not done yet
+            pass
         else:
             pass
 
