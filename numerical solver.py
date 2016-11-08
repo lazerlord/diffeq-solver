@@ -22,10 +22,14 @@ def plot(f, LEP, REP):
         d = abs(REP-i) # cannot have number - string, TypeError.
         i = str(i)
         F = f.replace('x', i)
-        y = eval(F)
-        y = Point(-d, y)
-        y.setFill('cyan2')
-        y.draw(win)
+        try: #Fixes Divide by Zero errors
+            y = eval(F)
+            y = Point(-d, y)
+            y.setFill('cyan2')
+            y.draw(win)
+        except:
+            pass
+        
     return win
 
 
@@ -48,8 +52,8 @@ def limits():
 
     button = Button(Point(-2, 0), Point(2, -3), 'Done')
     button.draw(win)
-    lim1.setText('-.8')
-    lim2.setText('-.3')
+    lim1.setText('1.145')
+    lim2.setText('1.837')
 
     while True:
         p = win.getMouse()
@@ -70,6 +74,7 @@ def evaluateAt():
     title.draw(win)
 
     point=Entry(Point(0, 0), 15)
+    point.setText('1.145')
     point.draw(win)
 
     end=Button(Point(-2,-2),Point(2,-3.5), 'Done')
@@ -91,15 +96,45 @@ def derivative(f, LEP,REP):
     x=evaluateAt()
     d = abs(REP-LEP)
     win = plot(f, LEP, REP)
-    X=str(x)
-    h=d/1000
-    xPh=x+h
-    xMh=x-h
+    h=0.0078125
+    xM3h=str(x-3*h)
+    xM2h=str(x-2*h)
+    xMh=str(x-h)
+    xPh=str(x+h)
+    xP2h=str(x+2*h)
+    xP3h=str(x+3*h)
 
-    Fx=f.replace('x',X)
-#not done yet.
+    #Using derivative of 6th degree collocation polynomial
+    #Could do extrapolation but after testing it shows to be less acurate
+    #6th degree collocation polynomial has average accuracy of 14 digits of accuracy
+
+    FxM3h=f.replace('x',xM3h)
+    FxM2h=f.replace('x',xM2h)
+    FxMh=f.replace('x',xMh)
+    FxPh=f.replace('x',xPh)
+    FxP2h=f.replace('x',xP2h)
+    FxP3h=f.replace('x',xP3h)
+
+    m = (-eval(FxM3h)+9*eval(FxM2h)-45*eval(FxMh)+45*eval(FxPh)-9*eval(FxP2h)+eval(FxP3h))/(60*h)
+
+    print(m)
+    g='m*(X-x)+f(x)'
+    y=eval(f.replace('x',str(x)))
+    g=g.replace('f(x)', str(y))
+    g=g.replace('x', str(x))
     
-    
+
+    for i in range(d*1000):
+        i = LEP+i*.001
+        d = abs(REP-i) 
+        i = str(i)
+        G = g.replace('X', i)
+        y = eval(G)
+        y = Point(-d, y)
+        y.setFill('red')
+        y.draw(win)
+
+    return m
 
     
 def integral(f, LEP, REP):
@@ -117,7 +152,7 @@ def integral(f, LEP, REP):
             F = f.replace('x', i) #keep original function intact
             y = eval(F)
             y = Line(Point(-d, y), Point(-d, 0))
-            y.setFill('cyan2')
+            y.setFill('red')
             y.draw(win)
         else:
             pass
@@ -159,8 +194,11 @@ def integral(f, LEP, REP):
         x = str(x)
         w = wi[i]
         F = f.replace('x', x) # Must keep original function intact for multiple
-        y = w*eval(F)       #itterations.
-        total = total + y
+        try:
+            y = w*eval(F)       #itterations.
+            total = total + y
+        except:
+            pass
     area = total*abs(b-a)
 
     return area
@@ -175,30 +213,43 @@ def roots(f, LEP, REP):
     for i in range(100):
         x1=((i+1)*d)/100-d/100+LEP
         x2=((i+1)*d)/100+d/100+LEP
-        for k in range(100):
-            X1=str(x1)
-            X2=str(x2)
-            F1=f.replace('x', X1)
-            F2=f.replace('x', X2)
-            if eval(F1)==0:
-                x3=x1
+        for k in range(100): #Added try statements because of some values overflowing/too large
+            try:
+                X1=str(x1)
+                X2=str(x2)
+                F1=f.replace('x', X1)
+                F2=f.replace('x', X2)
+            
+            
+                if eval(F1)==0:
+                    x3=x1
+                    break
+                if eval(F1)-(eval(F2))==0:
+                    break
+            
+                x3=x1-eval(F1)*(x1-x2)/(eval(F1)-(eval(F2)))
+            except:
                 break
-            if 1-(eval(F2)/eval(F1))==0:
-                break
-            x3=x1-(x1-x2)/(1-(eval(F2)/eval(F1)))
             x1,x2=x2,x3
 
-        X3=str(x3)
-        v=eval(f.replace('x', X3))
-        if -(10**(-16))<=v<=10**(-16):
-            
-            x3=round(x3,8)
-            if LEP<=x3<=REP:
-            
-                if x3 in roots:
-                    pass
-                else:
-                    roots.append(x3)
+        try: #Fixes Divide by Zero errors
+            X3=str(x3)
+            try:
+                v=eval(f.replace('x', X3))
+                if -(10**(-10))<=v<=10**(-10): #10^-16 was a bit too small to catch the zeroes of trig functions
+                    
+                    x3=round(x3,8)
+                    if LEP<=x3<=REP:
+                    
+                        if x3 in roots:
+                            pass
+                        else:
+                            roots.append(x3)
+            except:
+                pass
+        except:
+            pass
+
 
     roots.sort()
     for i in range(100):
@@ -226,7 +277,7 @@ def main():
 
     entry = Entry(Point(0, 70), 30)
     entry.draw(win)
-    entry.setText('(x-.5)^2*(x+.5)*(x-1)')
+    entry.setText('sin(exp(x))/x^2')
 
     button1 = Button(Point(-130, 30), Point(-70, 0),'Integrate')
     button1.draw(win)
@@ -244,14 +295,14 @@ def main():
 
     LEP = Entry(Point(30, -20), 5)
     LEP.draw(win)
-    LEP.setText('-1')
+    LEP.setText('0')
     REP = Entry(Point(30, -40), 5)
     REP.draw(win)
-    REP.setText('1')
+    REP.setText('2')
 
 
 
-    answer = Entry(Point(0, -85), 20)
+    answer = Entry(Point(0, -85), 40)
     SolLabel = Text(Point(0, -70),'')
 
     while True:
@@ -296,7 +347,23 @@ def main():
             answer.draw(win)
             
         elif button3.isClicked(p):
-            pass
+            SolLabel.undraw()
+            answer.undraw()
+            
+            f = entry.getText()
+            f = f.replace('^', '**')
+            f = f.replace('exp', '2.718281828459045**')
+            Lep = floor(eval(LEP.getText()))
+            Rep = ceil(eval(REP.getText()))
+            
+            m = derivative(f,Lep,Rep)
+            
+            SolLabel.setText('The derivative at the given point is')
+            SolLabel.draw(win)
+
+            answer.setText(str(m))
+            answer.draw(win)
+
         else:
             pass
 
