@@ -1,51 +1,29 @@
 from graphics import *
+class Button:
+    def __init__(self, p1, p2, label):
+        self.rect = Rectangle(p1,p2)
+        self.text = Text(Point((p1.getX()+p2.getX())/2 , (p1.getY()+p2.getY())/2), label)
+        self.p1 = Point(min(p1.getX(),p2.getX()), min(p1.getY(),p2.getY()))
+        self.p2 = Point(max(p1.getX(),p2.getX()), max(p1.getY(),p2.getY()))
 
+    def draw(self, win):
+        self.rect.draw(win)
+        self.text.draw(win)
+        self.win = win
 
-def midpoint(p1, p2):  # takes two Point objects as parameters
-    x1 = p1.getX()
-    x2 = p2.getX()
-    y1 = p1.getY()
-    y2 = p2.getY()
-
-    x = (x1 + x2) / 2
-    y = (y1 + y2) / 2
-
-    return Point(x, y)  # returns the midpoint as a Point object
-
-
-def squareButton_push(topLeftPoint, bottomRightPoint, win):
-    # takes 2 points and GraphWin as parameters
-    m = win.getMouse()
-
-    if(m.getX() >= topLeftPoint.getX() and
-       m.getX() <= bottomRightPoint.getX() and
-       m.getY() >= topLeftPoint.getY() and
-       m.getY() <= bottomRightPoint.getY()):
-        return True
-        # returns True if a square 'button' is clicked in a particular GraphWin
-
-
-def button(tfPoint, brPoint, text, win):
-    # takes top-left, bottom-right Point objects,
-    #   String, and GraphWin as parameters
-
-    shape = Rectangle(tfPoint, brPoint)
-    mid = midpoint(tfPoint, brPoint)
-    button_text = Text(mid, text)  # text displayed in center of button
-    shape.draw(win)
-    button_text.draw(win)
-
-
-def main():  # example usage
-    w = 500
-    win = GraphWin("Title", w, w)
-    p1 = Point(50, 50)
-    p2 = Point(100, 100)
-    button(p1, p2, "stuff", win)
-
-    while(True):
-        if(squareButton_push(p1, p2, win)):
-            print("lol")  # printed only if button clicked
+    def isClicked(self, p):
+        if self.p1.getX()<p.getX()<self.p2.getX() and self.p1.getY()<p.getY()<self.p2.getY():
+            return True
+        else:
+            return False
 
 if __name__ == "__main__":
-    main()
+    win = GraphWin('button test', 200,200)
+    button = Button(Point(150,50),Point(50,150),'click me')
+    button.draw(win)
+    while True:
+        p = win.getMouse()
+        if button.isClicked(p):
+            break
+
+    win.close()
