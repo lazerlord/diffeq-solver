@@ -1,16 +1,20 @@
 # This program will give the option of either finding roots, finding
 # the derivative at a point, or finding the area under the
-# curve in a given interval.
+# curve in a given interval. Also added Fourier Transform within
+# the plotted region.
 
 from graphics import *
 from math import *
 from button import *
 
 
-def plot(f, LEP, REP):
-    d = abs(REP-LEP)
+
+def plotWin(d):
     win = GraphWin('Graph', 400, 400)
     win.setCoords(-d, -d, 0, d)
+    return win
+def plot(f, LEP, REP, win, color):
+    d = abs(REP-LEP)
 
     xAxis = Line(Point(-d, 0), Point(0, 0))
     xAxis.draw(win)
@@ -25,7 +29,7 @@ def plot(f, LEP, REP):
         try: #Fixes Divide by Zero errors
             y = eval(F)
             y = Point(-d, y)
-            y.setFill('cyan2')
+            y.setFill(color)
             y.draw(win)
         except:
             pass
@@ -92,10 +96,12 @@ def evaluateAt():
     return eval(point.getText())
 
 
+
 def derivative(f, LEP,REP):
     x=evaluateAt()
     d = abs(REP-LEP)
-    win = plot(f, LEP, REP)
+    win = plotWin(d)
+    plot(f, LEP, REP, win, 'cyan2')
     h=0.0078125
     xM3h=str(x-3*h)
     xM2h=str(x-2*h)
@@ -117,30 +123,60 @@ def derivative(f, LEP,REP):
 
     m = (-eval(FxM3h)+9*eval(FxM2h)-45*eval(FxMh)+45*eval(FxPh)-9*eval(FxP2h)+eval(FxP3h))/(60*h)
 
-    print(m)
     g='m*(X-x)+f(x)'
     y=eval(f.replace('x',str(x)))
     g=g.replace('f(x)', str(y))
     g=g.replace('x', str(x))
-    
 
-    for i in range(d*1000):
-        i = LEP+i*.001
-        d = abs(REP-i) 
-        i = str(i)
-        G = g.replace('X', i)
-        y = eval(G)
-        y = Point(-d, y)
-        y.setFill('red')
-        y.draw(win)
+    Rep=str(REP)
+    Lep=str(LEP)
+    
+    G = g.replace('X', Lep)
+    y1=eval(G)
+    G = g.replace('X', Rep)
+    y2 = eval(G)
+    y = Line(Point(-d, y1),Point(0,y2))
+    y.setFill('red')
+    y.draw(win)
 
     return m
-
     
-def integral(f, LEP, REP):
+def integral(f, a, b):
+        # Gaussian quadrature for n=16, accuracy is high but a bit of a setup
+    xi = [0.005299532504175031, 0.0277124884633837, 0.06718439880608407,
+          0.12229779582249845, 0.19106187779867811, 0.27099161117138637,
+          0.35919822461037054, 0.45249374508118123, 0.5475062549188188,
+          0.6408017753896295, 0.7290083888286136, 0.8089381222013219,
+          0.8777022041775016, 0.9328156011939159, 0.9722875115366163,
+          0.9947004674958250]
+    wi = [0.013576229705876844, 0.03112676196932382, 0.04757925584124612,
+          0.06231448562776691, 0.07479799440828848, 0.08457825969750153,
+          0.09130170752246194, 0.0947253052275344, 0.0947253052275344,
+          0.09130170752246194, 0.08457825969750153, 0.07479799440828848,
+          0.06231448562776691, 0.04757925584124612, 0.03112676196932382,
+          0.013576229705876844]
+    # now that those are out of the way we may start integration
+
+    total = 0
+    for i in range(16):
+        x = xi[i]*abs(b-a)+a
+        x = str(x)
+        w = wi[i]
+        F = f.replace('x', x) # Must keep original function intact for multiple
+        try:
+            y = w*eval(F)       #itterations.
+            total = total + y
+        except:
+            pass
+    area = total*abs(b-a)
+    return area
+
+
+def integralPlot(f, LEP, REP):
     a, b = limits()
     d = abs(REP-LEP)
-    win = plot(f, LEP, REP)
+    win = plotWin(d)
+    plot(f, LEP, REP, win, 'cyan2')
     A = str(a) # a<i<b will not work if a and b are strings, TypeError.
     B = str(b)
 
@@ -173,41 +209,16 @@ def integral(f, LEP, REP):
     else:
         pass
 
-    # Gaussian quadrature for n=16, accuracy is high but a bit of a setup
-    xi = [0.005299532504175031, 0.0277124884633837, 0.06718439880608407,
-          0.12229779582249845, 0.19106187779867811, 0.27099161117138637,
-          0.35919822461037054, 0.45249374508118123, 0.5475062549188188,
-          0.6408017753896295, 0.7290083888286136, 0.8089381222013219,
-          0.8777022041775016, 0.9328156011939159, 0.9722875115366163,
-          0.9947004674958250]
-    wi = [0.013576229705876844, 0.03112676196932382, 0.04757925584124612,
-          0.06231448562776691, 0.07479799440828848, 0.08457825969750153,
-          0.09130170752246194, 0.0947253052275344, 0.0947253052275344,
-          0.09130170752246194, 0.08457825969750153, 0.07479799440828848,
-          0.06231448562776691, 0.04757925584124612, 0.03112676196932382,
-          0.013576229705876844]
-    # now that those are out of the way we may start integration
 
-    total = 0
-    for i in range(16):
-        x = xi[i]*abs(b-a)+a
-        x = str(x)
-        w = wi[i]
-        F = f.replace('x', x) # Must keep original function intact for multiple
-        try:
-            y = w*eval(F)       #itterations.
-            total = total + y
-        except:
-            pass
-    area = total*abs(b-a)
 
-    return area
+    return integral(f, a, b)
 
 
 def roots(f, LEP, REP):
     
     d = abs(REP-LEP)
-    win = plot(f, LEP, REP)
+    win = plotWin(d)
+    plot(f, LEP, REP, win, 'cyan2')
     roots=[]
 
     for i in range(100):
@@ -268,6 +279,38 @@ def roots(f, LEP, REP):
     return roots
         
 
+def fourier(f, a, b):
+    d = abs(b-a)
+    win = plotWin(d)
+    plot(f, a, b, win, 'cyan2')
+    a0=1/(2*pi)*integral(f,a,b)
+    Fa1= 'cos(x)*('+f+')'
+    a1=1/pi*integral(Fa1,a,b)
+    Fa2='cos(2*x)*('+f+')'
+    a2=1/pi*integral(Fa2,a,b)
+    Fa3='cos(3*x)*('+f+')'
+    a3=1/pi*integral(Fa3,a,b)
+    Fa4='cos(4*x)*('+f+')'
+    a4=1/pi*integral(Fa4,a,b)
+    Fa5='cos(5*x)*('+f+')'
+    a5=1/pi*integral(Fa5,a,b)
+    Fb1='sin(x)*('+f+')'
+    b1=1/pi*integral(Fb1,a,b)
+    Fb2='sin(2*x)*('+f+')'
+    b2=1/pi*integral(Fb2,a,b)
+    Fb3='sin(3*x)*('+f+')'
+    b3=1/pi*integral(Fb3,a,b)
+    Fb4='sin(4*x)*('+f+')'
+    b4=1/pi*integral(Fb4,a,b)
+    Fb5='sin(5*x)*('+f+')'
+    b5=1/pi*integral(Fb5,a,b)
+    
+
+    g=str(a0)+'+'+str(a1)+'*cos(x)+'+str(a2)+'*cos(2*x)+'+str(a3)+'*cos(3*x)+'+str(a4)+'*cos(4*x)+'+str(a5)+'*cos(5*x)+'+str(b1)+'*sin(x)+'+str(b2)+'*sin(2*x)+'+str(b3)+'*sin(3*x)+'+str(b4)+'*sin(4*x)+'+str(b5)+'*sin(5*x)'
+    plot(g, a, b, win, 'red')
+    print(a0,a1,a2,a3,b1,b2,b3,g,sep='\n')
+    
+
 def main():
     win = GraphWin('Numerical Solver Pro', 400, 400)
     win.setCoords(-150, -100, 150, 100)
@@ -279,14 +322,17 @@ def main():
     entry.draw(win)
     entry.setText('sin(exp(x))/x^2')
 
-    button1 = Button(Point(-130, 30), Point(-70, 0),'Integrate')
+    button1 = Button(Point(-140, 30), Point(-80, 0),'Integrate')
     button1.draw(win)
 
-    button2 = Button(Point(-30, 30), Point(30, 0),'Solve for \n roots')
+    button2 = Button(Point(-70, 30), Point(-10, 0),'Solve for \n roots')
     button2.draw(win)
 
-    button3 = Button(Point(130, 30), Point(70, 0), 'Find \n derivative \n at a point')
+    button3 = Button(Point(70, 30), Point(10, 0), 'Find \n derivative \n at a point')
     button3.draw(win)
+
+    button4 = Button(Point(80, 30), Point(140, 0), 'Fourier \n Transform')
+    button4.draw(win)
 
     lft = Text(Point(-40, -20), "   Plot from x =")
     lft.draw(win)
@@ -322,7 +368,7 @@ def main():
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
-            sol = integral(f, Lep, Rep)
+            sol = integralPlot(f, Lep, Rep)
             SolLabel.setText('The area under the curve within the limits is')
             
             SolLabel.draw(win)
@@ -363,6 +409,19 @@ def main():
 
             answer.setText(str(m))
             answer.draw(win)
+
+        elif button4.isClicked(p):
+            SolLabel.undraw()
+            answer.undraw()
+            
+            f = entry.getText()
+            f = f.replace('^', '**')
+            f = f.replace('exp', '2.718281828459045**')
+            Lep = floor(eval(LEP.getText()))
+            Rep = ceil(eval(REP.getText()))
+
+            fourier(f,Lep,Rep)
+            
 
         else:
             pass
