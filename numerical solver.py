@@ -8,9 +8,11 @@ from math import *
 from button import *
 
 
+def cbrt(x):
+    return copysign(pow(abs(x), 1.0/3.0), x)
 
-def plotWin(d):
-    win = GraphWin('Graph', 400, 400)
+def plotWin(d, num):
+    win = GraphWin('Graph '+num, 400, 400)
     win.setCoords(-d, -d, 0, d)
     return win
 def plot(f, LEP, REP, win, color):
@@ -56,8 +58,8 @@ def limits():
 
     button = Button(Point(-2, 0), Point(2, -3), 'Done')
     button.draw(win)
-    lim1.setText('1.145')
-    lim2.setText('1.837')
+    lim1.setText('0')
+    lim2.setText('1.145')
 
     while True:
         p = win.getMouse()
@@ -78,7 +80,7 @@ def evaluateAt():
     title.draw(win)
 
     point=Entry(Point(0, 0), 15)
-    point.setText('1.145')
+    point.setText('1.5')
     point.draw(win)
 
     end=Button(Point(-2,-2),Point(2,-3.5), 'Done')
@@ -97,10 +99,10 @@ def evaluateAt():
 
 
 
-def derivative(f, LEP,REP):
+def derivative(f, LEP, REP, num):
     x=evaluateAt()
     d = abs(REP-LEP)
-    win = plotWin(d)
+    win = plotWin(d, num)
     plot(f, LEP, REP, win, 'cyan2')
     h=0.0078125
     xM3h=str(x-3*h)
@@ -137,6 +139,7 @@ def derivative(f, LEP,REP):
     y2 = eval(G)
     y = Line(Point(-d, y1),Point(0,y2))
     y.setFill('red')
+    y.setWidth(2)
     y.draw(win)
 
     return m
@@ -162,9 +165,10 @@ def integral(f, a, b):
         x = xi[i]*abs(b-a)+a
         x = str(x)
         w = wi[i]
-        F = f.replace('x', x) # Must keep original function intact for multiple
+        F = f.replace('x', x) # Must keep original function
+                            #intact for multiple iterations.
         try:
-            y = w*eval(F)       #itterations.
+            y = w*eval(F)       
             total = total + y
         except:
             pass
@@ -172,10 +176,10 @@ def integral(f, a, b):
     return area
 
 
-def integralPlot(f, LEP, REP):
+def integralPlot(f, LEP, REP, num):
     a, b = limits()
     d = abs(REP-LEP)
-    win = plotWin(d)
+    win = plotWin(d, num)
     plot(f, LEP, REP, win, 'cyan2')
     A = str(a) # a<i<b will not work if a and b are strings, TypeError.
     B = str(b)
@@ -214,17 +218,18 @@ def integralPlot(f, LEP, REP):
     return integral(f, a, b)
 
 
-def roots(f, LEP, REP):
+def roots(f, LEP, REP, num):
     
     d = abs(REP-LEP)
-    win = plotWin(d)
+    win = plotWin(d, num)
     plot(f, LEP, REP, win, 'cyan2')
     roots=[]
 
-    for i in range(100):
-        x1=((i+1)*d)/100-d/100+LEP
-        x2=((i+1)*d)/100+d/100+LEP
-        for k in range(100): #Added try statements because of some values overflowing/too large
+    for i in range(200):
+        x1=((i)*d)/200-d/200+LEP
+        x2=((i)*d)/200+d/200+LEP
+        for k in range(100): #Added try statements because of
+                            #some values overflowing/too large
             try:
                 X1=str(x1)
                 X2=str(x2)
@@ -247,7 +252,8 @@ def roots(f, LEP, REP):
             X3=str(x3)
             try:
                 v=eval(f.replace('x', X3))
-                if -(10**(-10))<=v<=10**(-10): #10^-16 was a bit too small to catch the zeroes of trig functions
+                if -(10**(-10))<=v<=10**(-10): #10^-16 was a bit too small
+                                    #to catch the zeroes of trig functions
                     
                     x3=round(x3,8)
                     if LEP<=x3<=REP:
@@ -260,10 +266,18 @@ def roots(f, LEP, REP):
                 pass
         except:
             pass
-
+    v=eval(f.replace('x', str(0)))
+    if -(10**(-10))<=v<=10**(-10):
+        
+            if LEP<=x3<=REP:
+                 
+                if 0 in roots:
+                    pass
+                else:
+                    roots.append(0)
 
     roots.sort()
-    for i in range(100):
+    for i in range(200):
         if i<=len(roots)-1:
             p=-abs(REP-roots[i])
             point=Circle(Point(p,0),d/80)
@@ -279,9 +293,9 @@ def roots(f, LEP, REP):
     return roots
         
 
-def fourier(f, a, b):
+def fourier(f, a, b, num):
     d = abs(b-a)
-    win = plotWin(d)
+    win = plotWin(d, num)
     plot(f, a, b, win, 'cyan2')
     a0=1/(2*pi)*integral(f,a,b)
     Fa1= 'cos(x)*('+f+')'
@@ -294,6 +308,10 @@ def fourier(f, a, b):
     a4=1/pi*integral(Fa4,a,b)
     Fa5='cos(5*x)*('+f+')'
     a5=1/pi*integral(Fa5,a,b)
+    Fa6='cos(6*x)*('+f+')'
+    a6=1/pi*integral(Fa6,a,b)
+    Fa7='cos(7*x)*('+f+')'
+    a7=1/pi*integral(Fa7,a,b)
     Fb1='sin(x)*('+f+')'
     b1=1/pi*integral(Fb1,a,b)
     Fb2='sin(2*x)*('+f+')'
@@ -304,11 +322,21 @@ def fourier(f, a, b):
     b4=1/pi*integral(Fb4,a,b)
     Fb5='sin(5*x)*('+f+')'
     b5=1/pi*integral(Fb5,a,b)
+    Fb6='sin(6*x)*('+f+')'
+    b6=1/pi*integral(Fb6,a,b)
+    Fb7='sin(7*x)*('+f+')'
+    b7=1/pi*integral(Fb7,a,b)
     
 
-    g=str(a0)+'+'+str(a1)+'*cos(x)+'+str(a2)+'*cos(2*x)+'+str(a3)+'*cos(3*x)+'+str(a4)+'*cos(4*x)+'+str(a5)+'*cos(5*x)+'+str(b1)+'*sin(x)+'+str(b2)+'*sin(2*x)+'+str(b3)+'*sin(3*x)+'+str(b4)+'*sin(4*x)+'+str(b5)+'*sin(5*x)'
+    g=str(a0)+'+'+str(a1)+'*cos(x)+'+str(a2)+'*cos(2*x)+'+\
+       str(a3)+'*cos(3*x)+'+str(a4)+'*cos(4*x)+'+str(a5)+\
+       '*cos(5*x)+'+str(a6)+'*cos(6*x)+'+str(a7)+'*cos(7*x)+'+\
+       str(b1)+'*sin(x)+'+str(b2)+'*sin(2*x)+'+str(b3)+\
+       '*sin(3*x)+'+str(b4)+'*sin(4*x)+'+str(b5)+'*sin(5*x)+'+\
+       str(b6)+'*sin(6*x)+'+str(b7)+'*sin(7*x)'
+
+    
     plot(g, a, b, win, 'red')
-    print(a0,a1,a2,a3,b1,b2,b3,g,sep='\n')
     
 
 def main():
@@ -320,7 +348,7 @@ def main():
 
     entry = Entry(Point(0, 70), 30)
     entry.draw(win)
-    entry.setText('sin(exp(x))/x^2')
+    entry.setText('sin(exp(x))*cbrt(x)')
 
     button1 = Button(Point(-140, 30), Point(-80, 0),'Integrate')
     button1.draw(win)
@@ -341,7 +369,7 @@ def main():
 
     LEP = Entry(Point(30, -20), 5)
     LEP.draw(win)
-    LEP.setText('0')
+    LEP.setText('-1')
     REP = Entry(Point(30, -40), 5)
     REP.draw(win)
     REP.setText('2')
@@ -350,6 +378,8 @@ def main():
 
     answer = Entry(Point(0, -85), 40)
     SolLabel = Text(Point(0, -70),'')
+
+    i=1
 
     while True:
         p = win.getMouse()
@@ -368,13 +398,14 @@ def main():
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
-            sol = integralPlot(f, Lep, Rep)
+            sol = integralPlot(f, Lep, Rep, str(i))
             SolLabel.setText('The area under the curve within the limits is')
             
             SolLabel.draw(win)
             
             answer.setText(sol)
             answer.draw(win)
+            i+=1
         elif button2.isClicked(p):
             SolLabel.undraw()
             answer.undraw()
@@ -384,13 +415,14 @@ def main():
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
-            Roots=roots(f,Lep,Rep)
+            Roots=roots(f, Lep, Rep, str(i))
             
             SolLabel.setText('The roots of this function are')
             SolLabel.draw(win)
 
             answer.setText(Roots)
             answer.draw(win)
+            i+=1
             
         elif button3.isClicked(p):
             SolLabel.undraw()
@@ -402,13 +434,14 @@ def main():
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
             
-            m = derivative(f,Lep,Rep)
+            m = derivative(f, Lep, Rep, str(i))
             
             SolLabel.setText('The derivative at the given point is')
             SolLabel.draw(win)
 
             answer.setText(str(m))
             answer.draw(win)
+            i+=1
 
         elif button4.isClicked(p):
             SolLabel.undraw()
@@ -420,7 +453,8 @@ def main():
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
 
-            fourier(f,Lep,Rep)
+            fourier(f,Lep,Rep, str(i))
+            i+=1
             
 
         else:
