@@ -76,7 +76,8 @@ def evaluateAt():
     win = GraphWin('Evaluation Point')
     win.setCoords(-5, -5, 5, 5)
 
-    title = Text(Point(0, 3.5), "Put in what point you \n want to evaluate the \n derivative at")
+    title = Text(Point(0, 3.5), "Put in what point you \n"+\
+                 " want to evaluate the \n derivative at")
     title.draw(win)
 
     point=Entry(Point(0, 0), 15)
@@ -114,7 +115,7 @@ def derivative(f, LEP, REP, num):
 
     #Using derivative of 6th degree collocation polynomial
     #Could do extrapolation but after testing it shows to be less acurate
-    #6th degree collocation polynomial has average accuracy of 14 digits of accuracy
+    #6th degree collocation polynomial has average accuracy of 14 digits
 
     FxM3h=f.replace('x',xM3h)
     FxM2h=f.replace('x',xM2h)
@@ -145,7 +146,7 @@ def derivative(f, LEP, REP, num):
     return m
     
 def integral(f, a, b):
-        # Gaussian quadrature for n=16, accuracy is high but a bit of a setup
+        #Gaussian quadrature for n=16, accuracy is high but a bit of a setup
     xi = [0.005299532504175031, 0.0277124884633837, 0.06718439880608407,
           0.12229779582249845, 0.19106187779867811, 0.27099161117138637,
           0.35919822461037054, 0.45249374508118123, 0.5475062549188188,
@@ -158,14 +159,14 @@ def integral(f, a, b):
           0.09130170752246194, 0.08457825969750153, 0.07479799440828848,
           0.06231448562776691, 0.04757925584124612, 0.03112676196932382,
           0.013576229705876844]
-    # now that those are out of the way we may start integration
+    #now that those are out of the way we may start integration
 
     total = 0
     for i in range(16):
         x = xi[i]*abs(b-a)+a
         x = str(x)
         w = wi[i]
-        F = f.replace('x', x) # Must keep original function
+        F = f.replace('x', x) #Must keep original function
                             #intact for multiple iterations.
         try:
             y = w*eval(F)       
@@ -293,7 +294,9 @@ def roots(f, LEP, REP, num):
     return roots
         
 
-def fourier(f, a, b, num):
+def fourier(f, a, b, num): #could totally have
+                #made this a loop for as many
+            #iterations as the user wants
     d = abs(b-a)
     win = plotWin(d, num)
     plot(f, a, b, win, 'cyan2')
@@ -337,10 +340,12 @@ def fourier(f, a, b, num):
 
     
     plot(g, a, b, win, 'red')
+    g = g.replace('+-', '-')
+    return g
     
 
 def main():
-    win = GraphWin('Numerical Solver Pro', 400, 400)
+    win = GraphWin('Numerical Solver Pro', 600, 400)
     win.setCoords(-150, -100, 150, 100)
 
     title = Text(Point(0, 90), "Type in your function of x:")
@@ -350,21 +355,25 @@ def main():
     entry.draw(win)
     entry.setText('sin(exp(x))*cbrt(x)')
 
-    button1 = Button(Point(-140, 30), Point(-80, 0),'Integrate')
+    button1 = Button(Point(-80, 30), Point(-40, 0),'Integrate')
     button1.draw(win)
 
-    button2 = Button(Point(-70, 30), Point(-10, 0),'Solve for \n roots')
+    button2 = Button(Point(-20, 30), Point(20, 0),'Solve for \n roots')
     button2.draw(win)
 
-    button3 = Button(Point(70, 30), Point(10, 0), 'Find \n derivative \n at a point')
+    button3 = Button(Point(40, 30), Point(80, 0), 'Find \n'+\
+                     ' derivative \n at a point')
     button3.draw(win)
 
-    button4 = Button(Point(80, 30), Point(140, 0), 'Fourier \n Transform')
+    button4 = Button(Point(100, 30), Point(140, 0), 'Fourier \n Transform')
     button4.draw(win)
 
-    lft = Text(Point(-40, -20), "   Plot from x =")
+    button5 = Button(Point(-140, 30), Point(-100, 0),'Plot')
+    button5.draw(win)
+
+    lft = Text(Point(-10, -20), "Plot from x =")
     lft.draw(win)
-    rte = Text(Point(-40, -40), "                to x=")
+    rte = Text(Point(3, -40), "to x=")
     rte.draw(win)
 
     LEP = Entry(Point(30, -20), 5)
@@ -376,7 +385,7 @@ def main():
 
 
 
-    answer = Entry(Point(0, -85), 40)
+    answer = Entry(Point(0, -85), 60)
     SolLabel = Text(Point(0, -70),'')
 
     i=1
@@ -387,7 +396,7 @@ def main():
         
         
         if button1.isClicked(p):
-                 #undraw things from different labels and answer boxes
+            
             SolLabel.undraw()
             answer.undraw()
                 
@@ -395,6 +404,7 @@ def main():
             
             f = entry.getText()
             f = f.replace('^', '**')
+            f = f.replace('X', 'x')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
@@ -412,6 +422,7 @@ def main():
             
             f = entry.getText()
             f = f.replace('^', '**')
+            f = f.replace('X', 'x')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
@@ -430,6 +441,7 @@ def main():
             
             f = entry.getText()
             f = f.replace('^', '**')
+            f = f.replace('X', 'x')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
@@ -449,13 +461,36 @@ def main():
             
             f = entry.getText()
             f = f.replace('^', '**')
+            f = f.replace('X', 'x')
             f = f.replace('exp', '2.718281828459045**')
             Lep = floor(eval(LEP.getText()))
             Rep = ceil(eval(REP.getText()))
 
-            fourier(f,Lep,Rep, str(i))
-            i+=1
+            g=fourier(f,Lep,Rep, str(i))
+
+            SolLabel.setText('The equation for the approximation is')
+            SolLabel.draw(win)
             
+            answer.setText(g)
+            answer.draw(win)  
+            i+=1
+
+        elif button5.isClicked(p):
+            SolLabel.undraw()
+            answer.undraw()
+
+            f = entry.getText()
+            f = f.replace('^', '**')
+            f = f.replace('X', 'x')
+            f = f.replace('exp', '2.718281828459045**')
+            Lep = floor(eval(LEP.getText()))
+            Rep = ceil(eval(REP.getText()))
+
+            d=abs(Rep-Lep)
+
+            wind = plotWin(d, str(i))
+            plot(f, Lep, Rep, wind, 'cyan2')
+            i+=1
 
         else:
             pass
