@@ -8,6 +8,7 @@ import java.io.*;
 import javax.imageio.*;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptEngine;
+import java.math.*;
 
 class Project
 {
@@ -40,7 +41,6 @@ class Project
         double q4=0;
         try{q4 = h * (double)(engine.eval(Fq4));}
         catch(Exception ex){System.out.println(ex);}
-
         double y1 = y+(1.0/6.0)*(q1+2*q2+2*q3+q4);
 
         return y1;
@@ -65,7 +65,7 @@ class Project
         try {Yp=(double)(engine.eval(Fy));}
         catch(Exception ex) {System.out.println(ex);}
 
-        double yk = y3+4*h/3.0*(2*Yp2-Yp1+2*Yp);
+        double yk = y3+4.0*h/3.0*(2*Yp2-Yp1+2*Yp);
 
         String Fyk = f.replace("x", "("+Double.toString(x)+")");
         Fyk = Fyk.replace("y", "("+Double.toString(yk)+")");
@@ -88,34 +88,88 @@ class Project
         else if(st.size()==4){PopLast(st); st.push(a);}
     }
 
+    static String expFix(String f)
+    {
+        ArrayList<String> ops = new ArrayList<String>();
+        ops.add("+");
+        ops.add("-");
+        ops.add("*");
+        ops.add("/");
+        ops.add("^");
+        ops.add(",");
+        String[] F = f.split("");
+        String h,g;
+        h="";
+        g="";//If there is an easier way of doing this feel free to let me know, as this is very ugly.
+        for(int i=f.length()-1; i>0; i=i-1)
+        {
+            if(F[i].contentEquals("^"))
+            {
+                for(int j=0; j<i;j++)
+                {
+                    if(ops.contains((String)F[j]))
+                    {
+                        g=f.substring(j+1, i);
+                        for(int k=i+1; k<f.length();k++)
+                        {
+                            if(ops.contains((String)F[k]))
+                            {
+                                if(k!=i+1)
+                                {
+                                    h = f.substring(i+1, k);
+                                    break;
+                                }
+                            }   
+                        }
+                        f=f.replace(g+"^"+h,"Math.pow("+g+","+h+")");
+                        System.out.println(f);
+                        break;
+                    }
+                }
+            break;
+            }
+        }      
+        return f;
+    }
+    
     public static void main(String[] args)
     {
-        double x = 1;
+        double x = 0;
         double y = 1;
-        String f= "y*x";
-        double h = .1;
+        String f= "2*y-1";
+        while(f.contains("^"))
+        {
+            f = expFix(f);
+            f=f.replace("()","");
+        }
+        System.out.println(f);
+        double h = .001;
         double yt;
-        try{f=f.replace("/",".0/");}//also something wrong with squaring with ^
-        catch(Exception ex){}//looking for a solution for next time
+        try{f=f.replace("/",".0/");}
+        catch(Exception ex){}
         Stack<Double> st = new Stack<Double>();
-        for(int i=0; i<10; i++)
+        for(int i=0; i<11; i++)
         {
             if(st.size()<4)
             {
-                System.out.println(st);
-                y = RungeKutta(f,y,x,h);
+                try{y = RungeKutta(f,y,x,h);}
+                catch(Exception ex){System.out.println("Function error.");break;}
                 x=x+h;
                 Push4(st,y);
+                System.out.println(st);
+                System.out.println();
             }
             else if(st.size()==4)
             {
                 System.out.println(st);
-                y = Milne(f, st.get(3), st.get(2), st.get(1), st.get(0), h, x);
                 yt = RungeKutta(f,y,x,h);
+                y = Milne(f, st.get(0), st.get(1), st.get(2), st.get(3), h, x);
                 System.out.println("Runge-kutta --> " + Double.toString(yt));
                 System.out.println("Milne --> " + Double.toString(y));
-                Push4(st,y);//not sure why the two numbers are so different
+                System.out.println();
+                Push4(st,y);
             }
+            else{System.out.println("Stack error.");break;}
         }
     }
 }
