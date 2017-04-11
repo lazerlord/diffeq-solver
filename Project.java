@@ -9,7 +9,6 @@ import javax.imageio.*;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptEngine;
 import java.math.*;
-
 class Action
 {
     static String expFix(String f)
@@ -25,20 +24,22 @@ class Action
         String h,g;
         h="";
         g="";//If there is an easier way of doing this feel free to let me know, as this is very ugly.
+        int n = 0;
         for(int i=f.length()-1; i>0; i=i-1)
         {
-            if(F[i].contentEquals("^"))
+            if (F[i].contentEquals(")")){n++;}
+            else if (F[i].contentEquals("(")){n--;}
+            else if(F[i].contentEquals("^") && n==0)
             {
+                
                 for(int j=i-1; j>=0;j--)
                 {
-                    if(ops.contains((String)F[j]))
+                    if(ops.contains((String)F[j]) && n==0)
                     {
                         g=f.substring(j+1, i);
-                        System.out.println(i+1);
-                        System.out.println(f.length());
                         for(int k=i+1; k<=f.length()-1;k++)
                         {
-                            if(ops.contains((String)F[k]))
+                            if(ops.contains((String)F[k]) && n==0)
                             {
                                 h = f.substring(i+1, k);
                                 break;
@@ -47,21 +48,20 @@ class Action
                             {
                                 h = f.substring(i+1,k);
                                 if (h.contentEquals("")){h=(String)F[k];}
-                                System.out.println(h);
                                 break;
-                                
                             }
+                            else if (F[k].contentEquals(")")){n++;}
+                            else if (F[k].contentEquals("(")){n--;}
                         }
                         f=f.replace(g+"^"+h,"Math.pow("+g+","+h+")");
-                        System.out.println(f);
                         break;
                     }
                     else if(j==0)
                     {
                         g=f.substring(0, i);
-                        for(int k=i+1; k<f.length();k++)
+                        for(int k=i+1; k<=f.length()-1;k++)
                         {
-                            if(ops.contains((String)F[k]))
+                            if(ops.contains((String)F[k]) && n==0)
                             {
                                 h = f.substring(i+1, k);
                                 break;
@@ -69,13 +69,17 @@ class Action
                             else if(k==f.length()-1)
                             {
                                 h = f.substring(i+1,k);
+                                if (h.contentEquals("")){h=(String)F[k];}
                                 break;
                             }
+                            else if (F[k].contentEquals(")")){n++;}
+                            else if (F[k].contentEquals("(")){n--;}
                         }
                         f=f.replace(g+"^"+h,"Math.pow("+g+","+h+")");
-                        System.out.println(f);
                         break;
                     }
+                    else if (F[j].contentEquals(")")){n--;}
+                    else if (F[j].contentEquals("(")){n++;}
                 }
             break;
             }
@@ -118,8 +122,6 @@ class Equation
     }
     static double RungeKutta(String f, double y, double x, double h)
     {
-        
-
         String Fq1 = f.replace("x", "("+Double.toString(x)+")");
         Fq1 = Fq1.replace("y", "("+Double.toString(y)+")");
         double q1=0;
@@ -144,7 +146,6 @@ class Equation
         try{q4 = h * (double)(engine.eval(Fq4));}
         catch(Exception ex){System.out.println(ex);}
         double y1 = y+(1.0/6.0)*(q1+2*q2+2*q3+q4);
-
         return y1;
     }
     static double Milne(String f, double y3, double y2, double y1, double y, double h, double x)
@@ -178,8 +179,6 @@ class Equation
         yk = y1+h/3*(Yp1+4*Yp+YpK);
         return yk;
     }
-    
-    
     public static void main(String[] args)
     {
         double x = 0;
@@ -210,6 +209,7 @@ class Equation
                 System.out.println("Runge-kutta --> " + Double.toString(yt));
                 System.out.println("Milne --> " + Double.toString(y));
                 System.out.println();
+                x=x+h;
                 Push4(st,y);
             }
             else{System.out.println("Stack error.");break;}
@@ -221,18 +221,18 @@ class Project //Here begins the work for a system of ODEs
     static ScriptEngineManager mgr = new ScriptEngineManager();
     static ScriptEngine engine = mgr.getEngineByName("JavaScript");
 
-    static void PopLast(Stack<Double[]> st)
+    static void PopLast(Stack<ArrayList<Double>> st)
     {
         Collections.reverse(st);
         st.pop();
         Collections.reverse(st);
     }
-    static void Push4(Stack<Double[]> st, Double[] a)
+    static void Push4(Stack<ArrayList<Double>> st, ArrayList<Double> a)
     {
         if(st.size()<4){st.push(a);}
         else if(st.size()==4){PopLast(st); st.push(a);}
     }
-    static Double[] RungeKutta(String f, String g, double x, double y, double t, double h)
+    static ArrayList<Double> RungeKutta(String f, String g, double x, double y, double t, double h)
     {//Systems really make these equations look bad.
         
 
@@ -294,88 +294,124 @@ class Project //Here begins the work for a system of ODEs
 
         double x1 = y+(1.0/6.0)*(q1f+2*q2f+2*q3f+q4f);
         double y1 = x+(1.0/6.0)*(q1g+2*q2g+2*q3g+q4g);
-        Double[] XY = new Double[2];
-        XY[0]=x1;
-        XY[1]=y1;
-        System.out.println(XY);//this is interesting.
-        System.out.println(XY[0]);
-        System.out.println(XY[1]);
-        return XY;//This is not returning correctly
+        ArrayList<Double> XY = new ArrayList<Double>();
+        XY.add(y1);
+        XY.add(x1);
+        return XY;
         
     }
-    static double Milne(String f, double y3, double y2, double y1, double y, double h, double x)
+    static ArrayList<Double> Milne(String f, String g, double x3, double x2, double x1, double x, double y3, double y2, double y1, double y, double t, double h)
     {
-        String Fy2 = f.replace("x", "("+Double.toString(x)+")");
+        String Fy2 = f.replace("x", "("+Double.toString(x2)+")");
         Fy2 = Fy2.replace("y", "("+Double.toString(y2)+")");
-        double Yp2=0;
-        try {Yp2=(double)(engine.eval(Fy2));}
+        Fy2 = Fy2.replace("T", "("+Double.toString(t)+")");
+        double Vp2f=0;
+        try {Vp2f=(double)(engine.eval(Fy2));}
         catch(Exception ex) {System.out.println(ex);}
 
-        String Fy1 = f.replace("x", "("+Double.toString(x)+")");
+        String Gy2 = g.replace("x", "("+Double.toString(x2)+")");
+        Gy2 = Gy2.replace("y", "("+Double.toString(y2)+")");
+        Gy2 = Gy2.replace("T", "("+Double.toString(t)+")");
+        double Vp2g=0;
+        try {Vp2g=(double)(engine.eval(Gy2));}
+        catch(Exception ex) {System.out.println(ex);}
+
+        String Fy1 = f.replace("x", "("+Double.toString(x1)+")");
         Fy1 = Fy1.replace("y", "("+Double.toString(y1)+")");
-        double Yp1=0;
-        try {Yp1=(double)(engine.eval(Fy1));}
+        Fy1 = Fy1.replace("T", "("+Double.toString(t)+")");
+        double Vp1f=0;
+        try {Vp1f=(double)(engine.eval(Fy1));}
+        catch(Exception ex) {System.out.println(ex);}
+
+        String Gy1 = g.replace("x", "("+Double.toString(x1)+")");
+        Gy1 = Gy1.replace("y", "("+Double.toString(y1)+")");
+        Gy1 = Gy1.replace("T", "("+Double.toString(t)+")");
+        double Vp1g=0;
+        try {Vp1g=(double)(engine.eval(Gy1));}
         catch(Exception ex) {System.out.println(ex);}
 
         String Fy = f.replace("x", "("+Double.toString(x)+")");
         Fy = Fy.replace("y", "("+Double.toString(y)+")");
-        double Yp=0;
-        try {Yp=(double)(engine.eval(Fy));}
+        Fy = Fy.replace("T", "("+Double.toString(t)+")");
+        double Vpf=0;
+        try {Vpf=(double)(engine.eval(Fy));}
+        catch(Exception ex) {System.out.println(ex);}
+        
+        String Gy = g.replace("x", "("+Double.toString(x)+")");
+        Gy = Gy.replace("y", "("+Double.toString(y)+")");
+        Gy = Gy.replace("T", "("+Double.toString(t)+")");
+        double Vpg=0;
+        try {Vpg=(double)(engine.eval(Gy));}
         catch(Exception ex) {System.out.println(ex);}
 
-        double yk = y3+4.0*h/3.0*(2*Yp2-Yp1+2*Yp);
+        double yk = y3+4.0*h/3.0*(2*Vp2f-Vp1f+2*Vpf);
+        double xk = x3+4.0*h/3.0*(2*Vp2g-Vp1g+2*Vpg);
 
-        String Fyk = f.replace("x", "("+Double.toString(x)+")");
+        String Fyk = f.replace("x", "("+Double.toString(xk)+")");
         Fyk = Fyk.replace("y", "("+Double.toString(yk)+")");
-        double YpK=0;
-        try {YpK=(double)(engine.eval(Fyk));}
+        Fyk = Fyk.replace("T", "("+Double.toString(t)+")");
+        double VpKf=0;
+        try {VpKf=(double)(engine.eval(Fyk));}
         catch(Exception ex) {System.out.println(ex);}
 
-        yk = y1+h/3*(Yp1+4*Yp+YpK);
-        return yk;
+        String Gyk = g.replace("x", "("+Double.toString(xk)+")");
+        Gyk = Gyk.replace("y", "("+Double.toString(yk)+")");
+        Gyk = Gyk.replace("T", "("+Double.toString(t)+")");
+        double VpKg=0;
+        try {VpKg=(double)(engine.eval(Gyk));}
+        catch(Exception ex) {System.out.println(ex);}
+
+        yk = y1+h/3*(Vp1f+4*Vpf+VpKf);
+        xk = x1+h/3*(Vp1g+4*Vpg+VpKg);
+        ArrayList<Double> XY = new ArrayList<Double>();
+        XY.add(yk);
+        XY.add(xk);
+        return XY;
     }
     
     public static void main(String[] args)
     {
-        Double[] XY = new Double[2];//Switching to ArrayList for next time
+        ArrayList<Double> XY = new ArrayList<Double>();
         double x=0;
         double y=1;
-        XY[0] = x;
-        XY[1] = y;
+        XY.add(y);
+        XY.add(x);
         double t = 0;
 
-        String f= "cos(x)";
-        String g= "sin(y)";//if using time, must enter with T not t (look in Runge-kutta)
+        String f= "(1+cos(x))^2";
+        String g= "(1+sin(y))^2";//if using time, must enter with T not t (look in Runge-kutta)
         f=Action.replaceMath(f);
         g=Action.replaceMath(g);
         
         System.out.println(f);
         System.out.println(g);
-        double h = .01;
-        Double[] yt= new Double[2];
-        Stack<Double[]> st = new Stack<Double[]>();
-        for(int i=0; i<3; i++)
+        double h = .001;
+        Stack<ArrayList<Double>> st = new Stack<ArrayList<Double>>();
+        Push4(st,XY);
+        System.out.println(st);
+        ArrayList<Double> XYt = new ArrayList<Double>();
+        for(int i=0; i<0; i++)
         {
             if(st.size()<4)
             {
-                try{XY = RungeKutta(f,g,XY[0],XY[1],t,h);}//Something is wrong with the returning of XY
+                try{XY = RungeKutta(f,g,XY.get(0),XY.get(1),t,h);}
                 catch(Exception ex){System.out.println("Function error.");break;}
-                System.out.println(XY);
                 t=t+h;
                 Push4(st,XY);
                 System.out.println(st);
                 System.out.println();
             }
-           /* else if(st.size()==4) Milne not converted to System yet.
+            else if(st.size()==4)
             {
                 System.out.println(st);
-                yt = RungeKutta(f,g,XY[0],XY[1],t,h);
-                y = Milne(f, st.get(0), st.get(1), st.get(2), st.get(3), h, x);
-                System.out.println("Runge-kutta --> " + Double[].toString(yt));
-                System.out.println("Milne --> " + Double[].toString(y));
+                XYt = RungeKutta(f,g,XY.get(0),XY.get(1),t,h);
+                XY = Milne(f, g, st.get(0).get(1), st.get(1).get(1), st.get(2).get(1), st.get(3).get(1), st.get(0).get(0), st.get(1).get(0), st.get(2).get(0), st.get(3).get(0), t, h);
+                System.out.println("Runge-kutta --> "+XYt);
+                System.out.println("Milne --> "+XY);
                 System.out.println();
-                Push4(st,y);
-            }*/
+                t=t+h;
+                Push4(st,XY);
+            }
             else{System.out.println("Stack error.");break;}
         }
     }
