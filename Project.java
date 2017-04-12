@@ -9,6 +9,28 @@ import javax.imageio.*;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptEngine;
 import java.math.*;
+
+class MyCanvas extends JComponent
+{
+    private int x,y;
+    private int d=2;
+    public void setX(int X)
+    {
+        x=X;
+    }
+    public void setY(int Y)
+    {
+        y=Y;
+    }
+    public void setD(int D)
+    {
+        d=D;
+    }
+    public void paintComponent(Graphics g)
+    {
+        g.fillOval(x-d/2, y-d/2, d, d);
+    }
+}
 class Action
 {
     static String expFix(String f)
@@ -103,8 +125,18 @@ class Action
         catch(Exception ex){}
         return f;
     }
+    static void plot(double x, double y, MyCanvas canvas, double WB, double EB, double NB, double SB)
+    {
+        x = (1-(EB-x)/(EB-WB))*canvas.getWidth();
+        y = ((NB-y)/(NB-SB))*canvas.getHeight();
+        int X = Integer.valueOf((int) Math.round(x));
+        int Y = Integer.valueOf((int) Math.round(y));
+        canvas.setX(X);
+        canvas.setY(Y);
+        canvas.paint(canvas.getGraphics());
+    }
 }
-class Equation
+class EquationODE
 {
     static ScriptEngineManager mgr = new ScriptEngineManager();
     static ScriptEngine engine = mgr.getEngineByName("JavaScript");
@@ -179,18 +211,16 @@ class Equation
         yk = y1+h/3*(Yp1+4*Yp+YpK);
         return yk;
     }
-    public static void main(String[] args)
+    public static void Run(double x, double y, String f, MyCanvas canvas, double WB, double EB, double NB, double SB)
     {
-        double x = 0;
-        double y = 1;
-        String f= "x+y+y^2";
+        /*x = 0;
+        y = 1;
+        f= "x+y+y^2";*/
         f=Action.replaceMath(f);
-
-        System.out.println(f);
-        double h = .1;
-        double yt;
+        double h = Math.max(1.0/canvas.getWidth(), 1.0/canvas.getHeight());
         Stack<Double> st = new Stack<Double>();//Stack for keeping order along with fixed number of values.
-        for(int i=0; i<11; i++)
+        Action.plot(x, y, canvas, WB, EB, NB, SB);
+        while(x>=WB && x<=EB && y>=SB && y<=NB)
         {
             if(st.size()<4)
             {
@@ -198,25 +228,20 @@ class Equation
                 catch(Exception ex){System.out.println("Function error.");break;}
                 x=x+h;
                 Push4(st,y);
-                System.out.println(st);
-                System.out.println();
             }
             else if(st.size()==4)
             {
-                System.out.println(st);
-                yt = RungeKutta(f,y,x,h);
                 y = Milne(f, st.get(0), st.get(1), st.get(2), st.get(3), h, x);
-                System.out.println("Runge-kutta --> " + Double.toString(yt));
-                System.out.println("Milne --> " + Double.toString(y));
-                System.out.println();
                 x=x+h;
                 Push4(st,y);
+                
             }
             else{System.out.println("Stack error.");break;}
+            Action.plot(x, y, canvas, WB, EB, NB, SB);
         }
     }
 }
-class Project //Here begins the work for a system of ODEs
+class SystemODE
 {
     static ScriptEngineManager mgr = new ScriptEngineManager();
     static ScriptEngine engine = mgr.getEngineByName("JavaScript");
@@ -379,7 +404,7 @@ class Project //Here begins the work for a system of ODEs
         double t = 0;
 
         String f= "(1+cos(x))^2";
-        String g= "(1+sin(y))^2";//if using time, must enter with T not t (look in Runge-kutta)
+        String g= "(1+sin(y))^2";//if using time, must enter with T not t (because possible error with tan, tanh)
         f=Action.replaceMath(f);
         g=Action.replaceMath(g);
         
@@ -388,9 +413,7 @@ class Project //Here begins the work for a system of ODEs
         double h = .001;
         Stack<ArrayList<Double>> st = new Stack<ArrayList<Double>>();
         Push4(st,XY);
-        System.out.println(st);
-        ArrayList<Double> XYt = new ArrayList<Double>();
-        for(int i=0; i<0; i++)
+        for(int i=0; i<5; i++)
         {
             if(st.size()<4)
             {
@@ -398,21 +421,125 @@ class Project //Here begins the work for a system of ODEs
                 catch(Exception ex){System.out.println("Function error.");break;}
                 t=t+h;
                 Push4(st,XY);
-                System.out.println(st);
-                System.out.println();
             }
             else if(st.size()==4)
             {
-                System.out.println(st);
-                XYt = RungeKutta(f,g,XY.get(0),XY.get(1),t,h);
                 XY = Milne(f, g, st.get(0).get(1), st.get(1).get(1), st.get(2).get(1), st.get(3).get(1), st.get(0).get(0), st.get(1).get(0), st.get(2).get(0), st.get(3).get(0), t, h);
-                System.out.println("Runge-kutta --> "+XYt);
-                System.out.println("Milne --> "+XY);
-                System.out.println();
                 t=t+h;
                 Push4(st,XY);
             }
             else{System.out.println("Stack error.");break;}
         }
+    }
+}
+class Project
+{
+    JTextField f,g,mx,Mx,my,My;
+    JButton Start, Clear;
+    JFrame frame2;
+    boolean EQorSYS;
+    double WB,EB,NB,SB, x, y;//west bound, east, north, south.
+    String F,G;
+    MyCanvas canvas;
+    class MyActionListener implements ActionListener
+    {
+        public void actionPerformed(ActionEvent ev)
+        {
+            if(ev.getSource()==Start)
+            {
+                frame2.setVisible(false);
+                if(g.getText().contentEquals("")){EQorSYS=false;}
+                else{EQorSYS=true;}
+                WB=Double.valueOf(mx.getText());
+                EB=Double.valueOf(Mx.getText());
+                NB=Double.valueOf(My.getText());
+                SB=Double.valueOf(my.getText());
+                F=f.getText();
+                G=g.getText();
+                frame2.setVisible(true);
+            }
+        }
+    }
+    class MyMouseListener implements MouseListener
+    {
+        public void mouseClicked(MouseEvent ev)
+        {
+            x = ev.getX();
+            y = ev.getY();
+            x = ((canvas.getWidth()-x)/canvas.getWidth())*WB+(1-(canvas.getWidth()-x)/canvas.getWidth())*EB;
+            y = (1-(canvas.getHeight()-y)/canvas.getHeight())*SB+((canvas.getHeight()-y)/canvas.getHeight())*NB;
+            if(EQorSYS==false){EquationODE.Run(x, y, F, canvas, WB, EB, NB, SB);}
+        }
+        public void mouseExited(MouseEvent ev) {}
+        public void mouseEntered(MouseEvent ev) {}
+        public void mousePressed(MouseEvent ev) {}
+		public void mouseReleased(MouseEvent ev) {}
+    }
+
+    public Project()
+    {
+        JFrame frame1 = new JFrame("Setup");
+        frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame1.setLayout(new GridLayout(12,1));
+        JPanel[] panels = new JPanel[12];
+        for(int i=0; i<12; i++)
+        {
+            panels[i] = new JPanel();
+            frame1.add(panels[i]);
+        }
+        JLabel XL = new JLabel("x'= ");
+        panels[0].add(XL);
+        f = new JTextField("y^2-x", 30);
+        panels[0].add(f);
+        JLabel YL = new JLabel("y'= ");
+        panels[1].add(YL);
+        g = new JTextField(/*"(1+sin(y))^2",*/30);
+        panels[1].add(g);
+        JLabel MinX = new JLabel("Minimum value of x= ");
+        panels[3].add(MinX);
+        mx=new JTextField("-2",3);
+        panels[3].add(mx);
+        JLabel MaxX = new JLabel("Maximum value of x= ");
+        panels[4].add(MaxX);
+        Mx=new JTextField("4",3);
+        panels[4].add(Mx);
+        JLabel MinY = new JLabel("Minimum value of y= ");
+        panels[5].add(MinY);
+        my=new JTextField("-4",3);
+        panels[5].add(my);
+        JLabel MaxY = new JLabel("Maximum value of y= ");
+        panels[6].add(MaxY);
+        My=new JTextField("2",3);
+        panels[6].add(My);
+        Start = new JButton("Start");
+        panels[11].add(Start);
+        Clear = new JButton("Clear");
+        panels[11].add(Clear);
+
+        MyActionListener list = new MyActionListener();
+        Start.addActionListener(list);
+        Clear.addActionListener(list);
+
+        frame1.setSize(400,500);
+        frame1.setVisible(true);
+
+        frame2 = new JFrame("Plot");
+        JPanel south = new JPanel();
+        JLabel PlotX = new JLabel("x");
+        south.add(PlotX);
+        frame2.add(south, BorderLayout.SOUTH);
+        JPanel west = new JPanel();
+        JLabel PlotY = new JLabel("y");
+        west.add(PlotY);
+        frame2.add(west, BorderLayout.WEST);
+        frame2.setSize(600,600);
+        canvas = new MyCanvas();
+        MyMouseListener listener = new MyMouseListener();
+		canvas.addMouseListener(listener);
+        frame2.add(canvas, BorderLayout.CENTER);
+    }
+    static public void main(String[] args)
+    {
+        new Project();
     }
 }
