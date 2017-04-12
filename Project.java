@@ -51,17 +51,17 @@ class Action
         {
             if (F[i].contentEquals(")")){n++;}
             else if (F[i].contentEquals("(")){n--;}
-            else if(F[i].contentEquals("^") && n==0)
+            else if(F[i].contentEquals("^") && n>=0)
             {
-                
+                n=0;
                 for(int j=i-1; j>=0;j--)
                 {
-                    if(ops.contains((String)F[j]) && n==0)
+                    if(ops.contains((String)F[j]) && n==0 || F[j].contentEquals("(") && n==0)
                     {
                         g=f.substring(j+1, i);
                         for(int k=i+1; k<=f.length()-1;k++)
                         {
-                            if(ops.contains((String)F[k]) && n==0)
+                            if(ops.contains((String)F[k]) && n==0 || F[k].contentEquals("(") && n==-1)
                             {
                                 h = f.substring(i+1, k);
                                 break;
@@ -83,7 +83,7 @@ class Action
                         g=f.substring(0, i);
                         for(int k=i+1; k<=f.length()-1;k++)
                         {
-                            if(ops.contains((String)F[k]) && n==0)
+                            if(ops.contains((String)F[k]) && n==0 || F[k].contentEquals(")") && n==-1)
                             {
                                 h = f.substring(i+1, k);
                                 break;
@@ -216,6 +216,8 @@ class EquationODE
         /*x = 0;
         y = 1;
         f= "x+y+y^2";*/
+        double X=x;
+        double Y=y;
         f=Action.replaceMath(f);
         double h = Math.max(1.0/canvas.getWidth(), 1.0/canvas.getHeight());
         Stack<Double> st = new Stack<Double>();//Stack for keeping order along with fixed number of values.
@@ -239,6 +241,7 @@ class EquationODE
             else{System.out.println("Stack error.");break;}
             Action.plot(x, y, canvas, WB, EB, NB, SB);
         }
+        st.clear();
     }
 }
 class SystemODE
