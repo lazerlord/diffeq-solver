@@ -12,8 +12,8 @@ import java.math.*;
 
 class MyCanvas extends JComponent
 {
-    static private int a,b,W,H;//Width and Height
-    static private double A,B,EB,WB,NB,SB;
+    static private int a,b,c,e,W,H;//Width and Height
+    static private double A,B,EB,WB,NB,SB,s,L;
     static private int d=2;//xy coords, coords for vector points, direction of vector points
     static ArrayList<Double> X = new ArrayList<Double>();
     static ArrayList<Double> Y = new ArrayList<Double>();
@@ -21,9 +21,7 @@ class MyCanvas extends JComponent
     static ArrayList<Double> DY = new ArrayList<Double>();
     static ArrayList<Double> VX = new ArrayList<Double>();
     static ArrayList<Double> VY = new ArrayList<Double>();
-    
-
-
+    static private boolean k;
     static public void addPoint(double x, double y)
     {
         X.add(x);
@@ -76,16 +74,32 @@ class MyCanvas extends JComponent
     }
     public void paintComponent(Graphics g)
     {
-        for(int i=0; i<X.size();i++)//for Function
-        {   //function    
+        //vectors
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, W, H);
+        g.setColor(Color.GRAY);
+        L=Math.min(Math.abs((1.0*EB-WB)/(VX.size())),(1.0*NB-SB)/(VY.size()))*5;
+        for(int i=0; i<DX.size();i++)
+        {
+            s=L/(Math.sqrt(Math.pow(DX.get(i), 2)+Math.pow(DY.get(i), 2)));
+            a = Integer.valueOf((int) Math.round((1-(EB-(VX.get(i)-s*DX.get(i)))/(EB-WB))*W));
+            b = Integer.valueOf((int) Math.round(((NB-(VY.get(i)-s*DY.get(i)))/(NB-SB))*H));
+            c = Integer.valueOf((int) Math.round((1-(EB-(VX.get(i)+s*DX.get(i)))/(EB-WB))*W));
+            e = Integer.valueOf((int) Math.round(((NB-(VY.get(i)+s*DY.get(i)))/(NB-SB))*H));
+            g.drawLine(a, b, c, e);
+            
+        }
+        //function
+        g.setColor(Color.BLACK);
+        for(int i=0; i<X.size();i++)
+        {     
             A = (1-(EB-X.get(i))/(EB-WB))*W;
             B = ((NB-Y.get(i))/(NB-SB))*H;
             a = Integer.valueOf((int) Math.round(A));
             b = Integer.valueOf((int) Math.round(B));
             g.fillOval(a-d/2, b-d/2, d, d);
-            //vectors
-
         }
+        
     }
 }
 class Action
@@ -236,14 +250,14 @@ class EquationODE
     }
     static double Milne(String f, double y3, double y2, double y1, double y, double h, double x)
     {
-        String Fy2 = f.replace("x", "("+Double.toString(x)+")");
+        String Fy2 = f.replace("x", "("+Double.toString(x-2*h)+")");
         Fy2 = Fy2.replace("y", "("+Double.toString(y2)+")");
         Fy2 = Action.replacePM(Fy2);
         double Yp2=0;
         try {Yp2=(double)(engine.eval(Fy2));}
         catch(Exception ex) {System.out.println(ex);}
 
-        String Fy1 = f.replace("x", "("+Double.toString(x)+")");
+        String Fy1 = f.replace("x", "("+Double.toString(x-h)+")");
         Fy1 = Fy1.replace("y", "("+Double.toString(y1)+")");
         Fy1 = Action.replacePM(Fy1);
         double Yp1=0;
@@ -259,7 +273,7 @@ class EquationODE
 
         double yk = y3+4.0*h/3.0*(2*Yp2-Yp1+2*Yp);
 
-        String Fyk = f.replace("x", "("+Double.toString(x)+")");
+        String Fyk = f.replace("x", "("+Double.toString(x+h)+")");
         Fyk = Fyk.replace("y", "("+Double.toString(yk)+")");
         Fyk = Action.replacePM(Fyk);
         double YpK=0;
@@ -269,7 +283,7 @@ class EquationODE
         yk = y1+h/3*(Yp1+4*Yp+YpK);
         return yk;
     }
-    public static void Run(double x, double y, double h, String f, MyCanvas canvas, double WB, double EB, double NB, double SB)
+    public static void run(double x, double y, double h, String f, MyCanvas canvas, double WB, double EB, double NB, double SB)
     {
         double X=x;
         double Y=y;
@@ -339,8 +353,9 @@ class SystemODE
         if(st.size()<4){st.push(a);}
         else if(st.size()==4){PopLast(st); st.push(a);}
     }
+    //Systems really make these equations look bad.
     static ArrayList<Double> RungeKutta(String f, String g, double x, double y, double t, double h)//Simple algorithms, they work fine so ignore code inside, just messy.
-    {//Systems really make these equations look bad.
+    {
         
 
         String Fq1 = f.replace("x", "("+Double.toString(x)+")");
@@ -415,12 +430,11 @@ class SystemODE
         return XY;
         
     }
-    //Unfortunately the Milne method for a system, though it is faster, is turning out to be inaccurate.
     static ArrayList<Double> Milne(String f, String g, double x3, double x2, double x1, double x, double y3, double y2, double y1, double y, double t, double h)
     {
         String Fy2 = f.replace("x", "("+Double.toString(x2)+")");
         Fy2 = Fy2.replace("y", "("+Double.toString(y2)+")");
-        Fy2 = Fy2.replace("T", "("+Double.toString(t)+")");
+        Fy2 = Fy2.replace("T", "("+Double.toString(t-2*h)+")");
         Fy2 = Action.replacePM(Fy2);
         double Vp2f=0;
         try {Vp2f=(double)(engine.eval(Fy2));}
@@ -428,7 +442,7 @@ class SystemODE
 
         String Gy2 = g.replace("x", "("+Double.toString(x2)+")");
         Gy2 = Gy2.replace("y", "("+Double.toString(y2)+")");
-        Gy2 = Gy2.replace("T", "("+Double.toString(t)+")");
+        Gy2 = Gy2.replace("T", "("+Double.toString(t-2*h)+")");
         Gy2 = Action.replacePM(Gy2);
         double Vp2g=0;
         try {Vp2g=(double)(engine.eval(Gy2));}
@@ -436,7 +450,7 @@ class SystemODE
 
         String Fy1 = f.replace("x", "("+Double.toString(x1)+")");
         Fy1 = Fy1.replace("y", "("+Double.toString(y1)+")");
-        Fy1 = Fy1.replace("T", "("+Double.toString(t)+")");
+        Fy1 = Fy1.replace("T", "("+Double.toString(t-h)+")");
         Fy1 = Action.replacePM(Fy1);
         double Vp1f=0;
         try {Vp1f=(double)(engine.eval(Fy1));}
@@ -444,7 +458,7 @@ class SystemODE
 
         String Gy1 = g.replace("x", "("+Double.toString(x1)+")");
         Gy1 = Gy1.replace("y", "("+Double.toString(y1)+")");
-        Gy1 = Gy1.replace("T", "("+Double.toString(t)+")");
+        Gy1 = Gy1.replace("T", "("+Double.toString(t-h)+")");
         Gy1 = Action.replacePM(Gy1);
         double Vp1g=0;
         try {Vp1g=(double)(engine.eval(Gy1));}
@@ -471,7 +485,7 @@ class SystemODE
 
         String Fyk = f.replace("x", "("+Double.toString(xk)+")");
         Fyk = Fyk.replace("y", "("+Double.toString(yk)+")");
-        Fyk = Fyk.replace("T", "("+Double.toString(t)+")");
+        Fyk = Fyk.replace("T", "("+Double.toString(t+h)+")");
         Fyk = Action.replacePM(Fyk);
         double VpKf=0;
         try {VpKf=(double)(engine.eval(Fyk));}
@@ -479,21 +493,21 @@ class SystemODE
 
         String Gyk = g.replace("x", "("+Double.toString(xk)+")");
         Gyk = Gyk.replace("y", "("+Double.toString(yk)+")");
-        Gyk = Gyk.replace("T", "("+Double.toString(t)+")");
+        Gyk = Gyk.replace("T", "("+Double.toString(t+h)+")");
         Gyk = Action.replacePM(Gyk);
         double VpKg=0;
         try {VpKg=(double)(engine.eval(Gyk));}
         catch(Exception ex) {System.out.println(ex);}
 
-        yk = (y1+h/3)*(Vp1f+4*Vpf+VpKf);
-        xk = (x1+h/3)*(Vp1g+4*Vpg+VpKg);
+        yk = y1+(h/3)*(Vp1f+4*Vpf+VpKf);
+        xk = x1+(h/3)*(Vp1g+4*Vpg+VpKg);
         ArrayList<Double> XY = new ArrayList<Double>();
         XY.add(yk);
         XY.add(xk);
         return XY;
     }
     
-    public static void Run(double x, double y, double h, String f, String g, MyCanvas canvas, double WB, double EB, double NB, double SB)
+    public static void run(double x, double y, double h, String f, String g, MyCanvas canvas, double WB, double EB, double NB, double SB)
     {
         ArrayList<Double> XY = new ArrayList<Double>();
         ArrayList<Double> XY2 = new ArrayList<Double>();
@@ -519,14 +533,14 @@ class SystemODE
             }
             else if(st.size()==4)
             {
-                //XY = Milne(f, g, st.get(0).get(1), st.get(1).get(1), st.get(2).get(1), st.get(3).get(1), st.get(0).get(0), st.get(1).get(0), st.get(2).get(0), st.get(3).get(0), t, h);
-                XY = RungeKutta(f,g,XY.get(0),XY.get(1),t,h);
+                XY = Milne(f, g, st.get(0).get(1), st.get(1).get(1), st.get(2).get(1), st.get(3).get(1), st.get(0).get(0), st.get(1).get(0), st.get(2).get(0), st.get(3).get(0), t, h);
+                //XY = RungeKutta(f,g,XY.get(0),XY.get(1),t,h);
                 t=t+h;
                 Push4(st,XY);
                 if(Math.abs(st.get(0).get(1)-st.get(1).get(1))<.0000005 || Math.abs(st.get(0).get(0)-st.get(1).get(0))<.0000005){break;}
             }
             else{System.out.println("Stack error.");break;}
-            if(MyCanvas.checkIn(XY.get(1),XY.get(0))==false || i<=8){MyCanvas.addPoint(XY.get(1), XY.get(0));}
+            if(MyCanvas.checkIn(XY.get(1),XY.get(0))==false || i<=4){MyCanvas.addPoint(XY.get(1), XY.get(0));}
             else{break;}
             i++;
         }
@@ -546,15 +560,15 @@ class SystemODE
             }
             else if(st.size()==4)
             {
-                //XY2 = Milne(f, g, st.get(0).get(1), st.get(1).get(1), st.get(2).get(1), st.get(3).get(1), st.get(0).get(0), st.get(1).get(0), st.get(2).get(0), st.get(3).get(0), t, h);
-                XY2 = RungeKutta(f,g,XY2.get(0),XY2.get(1),t,h);
+                XY2 = Milne(f, g, st.get(0).get(1), st.get(1).get(1), st.get(2).get(1), st.get(3).get(1), st.get(0).get(0), st.get(1).get(0), st.get(2).get(0), st.get(3).get(0), t, h);
+                //XY2 = RungeKutta(f,g,XY2.get(0),XY2.get(1),t,h);
                 t=t+h;
                 Push4(st,XY2);
                 if(Math.abs(st.get(0).get(1)-st.get(1).get(1))<.0000005 || Math.abs(st.get(0).get(0)-st.get(1).get(0))<.0000005){break;}
             }
             
             else{System.out.println("Stack error.");break;}
-            if(MyCanvas.checkIn(XY2.get(1),XY2.get(0))==false || i<=8){MyCanvas.addPoint(XY2.get(1), XY2.get(0));}
+            if(MyCanvas.checkIn(XY2.get(1),XY2.get(0))==false || i<=4){MyCanvas.addPoint(XY2.get(1), XY2.get(0));}
             else{break;}
             i++;
         }
@@ -569,6 +583,7 @@ class Project
     JFrame frame2;
     boolean EQorSYS;
     double WB,EB,NB,SB, x, y, dx, dy, h, vx, vy, Dx, Dy;//west bound, east, north, south. Then variables for later
+    ArrayList<Double> XY = new ArrayList<Double>();
     String F,G;
     MyCanvas canvas;
     class MyActionListener implements ActionListener
@@ -610,8 +625,8 @@ class Project
                             y = j*dy;
                             x = ((canvas.getWidth()-x)/canvas.getWidth())*WB+(1-(canvas.getWidth()-x)/canvas.getWidth())*EB;
                             y = (1-(canvas.getHeight()-y)/canvas.getHeight())*SB+((canvas.getHeight()-y)/canvas.getHeight())*NB;
-                            Dy = EquationODE.RungeKutta(F, y, x, h);
-                            MyCanvas.addVector(x,y,x+h, Dy);
+                            Dy = EquationODE.RungeKutta(F, y, x, h)-y;
+                            MyCanvas.addVector(x,y,h, Dy);
                         }
                     }
                 }
@@ -642,7 +657,21 @@ class Project
                     dx=(1.0*canvas.getWidth())/vx;
                     dy=(1.0*canvas.getHeight())/vy;
                     h = Math.min(1.0/canvas.getWidth(), 1.0/canvas.getHeight());
-                    
+                    for(double i = 1; i<vx; i++)
+                    {
+                        for(double j=1; j<vy;j++)
+                        {
+                            x = i*dx;
+                            y = j*dy;
+                            x = ((canvas.getWidth()-x)/canvas.getWidth())*WB+(1-(canvas.getWidth()-x)/canvas.getWidth())*EB;
+                            y = (1-(canvas.getHeight()-y)/canvas.getHeight())*SB+((canvas.getHeight()-y)/canvas.getHeight())*NB;
+                            XY = SystemODE.RungeKutta(F, G, x, y, 0.0, h);
+                            Dx=XY.get(0)-x;
+                            Dy=XY.get(1)-y;
+                            System.out.println("x="+Dx);
+                            MyCanvas.addVector(x,y,Dx,Dy);
+                        }
+                    }
                 }
                 
             }
@@ -657,20 +686,30 @@ class Project
             
             x = ((canvas.getWidth()-x)/canvas.getWidth())*WB+(1-(canvas.getWidth()-x)/canvas.getWidth())*EB;
             y = (1-(canvas.getHeight()-y)/canvas.getHeight())*SB+((canvas.getHeight()-y)/canvas.getHeight())*NB;
-            if(EQorSYS==false){EquationODE.Run(x, y, h, F, canvas, WB, EB, NB, SB);}
-            else if(EQorSYS==true){SystemODE.Run(x, y, h, F, G, canvas, WB, EB, NB, SB);}
+            if(EQorSYS==false){EquationODE.run(x, y, h, F, canvas, WB, EB, NB, SB);}
+            else if(EQorSYS==true){SystemODE.run(x, y, h, F, G, canvas, WB, EB, NB, SB);}
             canvas.repaint();
         }
         public void mouseExited(MouseEvent ev) {}
         public void mouseEntered(MouseEvent ev) {}
-        public void mousePressed(MouseEvent ev) {}
+        public void mousePressed(MouseEvent ev) 
+        {
+            MyCanvas.setH(canvas.getHeight());
+            MyCanvas.setW(canvas.getWidth());
+            frame2.repaint();
+        }
         public void mouseDragged()
         {
             MyCanvas.setH(canvas.getHeight());
             MyCanvas.setW(canvas.getWidth());
             frame2.repaint();
         }
-		public void mouseReleased(MouseEvent ev) {}
+		public void mouseReleased(MouseEvent ev)
+        {
+            MyCanvas.setH(canvas.getHeight());
+            MyCanvas.setW(canvas.getWidth());
+            frame2.repaint();
+        }
     }
     public Project()
     {
@@ -737,12 +776,10 @@ class Project
         west.add(PlotY);
         frame2.add(west, BorderLayout.WEST);
         canvas = new MyCanvas();
-        //canvas.setForeground(Color.WHITE);
         MyMouseListener listener = new MyMouseListener();
 		canvas.addMouseListener(listener);
         frame2.add(canvas, BorderLayout.CENTER);
         frame2.setSize(600,600);
-        
     }
     static public void main(String[] args)
     {
